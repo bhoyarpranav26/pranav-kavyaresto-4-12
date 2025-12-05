@@ -8,7 +8,8 @@ const authController = require('../controllers/authController')
 // returns provider details or error. Useful for validating SendGrid/SMTP.
 router.post('/test-email', async (req, res) => {
   try {
-    const { email } = req.body
+    // Accept email from JSON body or query string to make testing from curl
+    const email = (req.body && req.body.email) || req.query.email
     if (!email) return res.status(400).json({ message: 'email required' })
 
     // Use a deterministic test OTP (or random) — it's just for send validation
