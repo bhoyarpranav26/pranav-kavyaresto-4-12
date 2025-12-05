@@ -142,6 +142,9 @@ async function sendOtpEmail(name, email, otp) {
   }
 }
 
+// Export helper so we can call it from a test endpoint
+exports.sendOtpEmail = sendOtpEmail
+
 // RESEND OTP: generate new OTP and email it
 exports.resendOtp = async (req, res) => {
   try {

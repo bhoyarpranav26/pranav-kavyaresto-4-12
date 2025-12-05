@@ -41,6 +41,11 @@ const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
 console.log("📌 Auth routes mounted at /api/auth");
 
+// Internal/test routes for quick debugging (do not expose in production)
+const internalRoutes = require('./routes/internalRoutes')
+app.use('/internal', internalRoutes)
+console.log('📌 Internal routes mounted at /internal')
+
 const menuRoutes = require('./routes/menuRoutes');
 app.use('/api/menu', menuRoutes);
 console.log('📌 Menu routes mounted at /api/menu');
