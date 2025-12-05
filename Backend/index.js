@@ -7,22 +7,10 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware - configure CORS to allow known frontends and enable credentials
-const allowedOrigins = [
-  process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
-  process.env.FRONTEND_PROD_ORIGIN // optional production frontend URL
-].filter(Boolean);
-
-app.use(cors({
-  origin(origin, callback) {
-    // allow requests with no origin (e.g. curl, mobile apps, or server-to-server)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-    return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
-  credentials: true
-}));
+// Middleware - temporarily allow all origins while debugging CORS on Render.
+// WARNING: permissive setting for testing only. Replace with an allowlist
+// (using FRONTEND_PROD_ORIGIN / FRONTEND_ORIGIN env vars) before production.
+app.use(cors());
 app.use(bodyParser.json())
 
 // Note: cors middleware is applied globally above. Explicit `app.options('*', ...)`
