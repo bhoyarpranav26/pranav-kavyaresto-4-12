@@ -25,8 +25,10 @@ app.use(cors({
 }));
 app.use(bodyParser.json())
 
-// Enable preflight for all routes
-app.options('*', cors())
+// Note: cors middleware is applied globally above. Explicit `app.options('*', ...)`
+// can cause path-to-regexp issues on some environments (see Render logs). The
+// global `app.use(cors(...))` handles preflight requests, so we avoid registering
+// an explicit '*' options route to prevent startup errors.
 
 // Simple request logger to help debug frontend calls
 app.use((req, res, next) => {
