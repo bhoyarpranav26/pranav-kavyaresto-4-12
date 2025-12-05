@@ -7,9 +7,26 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware - during local development allow all origins so the frontend can reach the API
-app.use(cors())
+// Middleware - configure CORS to allow known frontends and enable credentials
+const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+  process.env.FRONTEND_PROD_ORIGIN // optional production frontend URL
+].filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // allow requests with no origin (e.g. curl, mobile apps, or server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
+  credentials: true
+}));
 app.use(bodyParser.json())
+
+// Enable preflight for all routes
+app.options('*', cors())
 
 // Simple request logger to help debug frontend calls
 app.use((req, res, next) => {
@@ -49,6 +66,11 @@ console.log('📌 Payments routes mounted at /api/payments');
 // Root test
 app.get("/", (req, res) => {
   res.send("Backend is running!");
+});
+
+// Some hosts (Render health checks) send HEAD /. Allow it and return 200 without body.
+app.head('/', (req, res) => {
+  res.status(200).end();
 });
 
 // ==========================
