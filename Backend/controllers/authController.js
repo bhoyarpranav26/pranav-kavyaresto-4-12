@@ -234,6 +234,10 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err);
+    // In debugging mode, return error details to help diagnose 500s quickly.
+    if (process.env.DEV_DEBUG === 'true') {
+      return res.status(500).json({ message: "Login failed", error: String(err && err.message), stack: err && err.stack });
+    }
     return res.status(500).json({ message: "Login failed" });
   }
 };
