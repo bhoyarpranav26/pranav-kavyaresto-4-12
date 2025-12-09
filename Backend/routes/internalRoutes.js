@@ -28,4 +28,26 @@ router.post('/test-email', async (req, res) => {
   }
 })
 
+// GET /internal/ping
+// Returns basic instance information and CORS configuration to help
+// verify that the running service is the updated deployment.
+router.get('/ping', (req, res) => {
+  try {
+    const allowAll = String(process.env.ALLOW_ALL_ORIGINS || '').toLowerCase() === 'true'
+    const allowedOrigins = [process.env.FRONTEND_ORIGIN, process.env.FRONTEND_PROD_ORIGIN].filter(Boolean)
+    const info = {
+      ok: true,
+      time: new Date().toISOString(),
+      originReceived: req.headers.origin || null,
+      allowAll,
+      allowedOrigins,
+      nodeEnv: process.env.NODE_ENV || 'development'
+    }
+    return res.status(200).json(info)
+  } catch (err) {
+    console.error('Ping endpoint error:', err)
+    return res.status(500).json({ ok: false, message: 'Ping failed', error: err.message })
+  }
+})
+
 module.exports = router
