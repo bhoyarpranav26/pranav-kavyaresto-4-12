@@ -31,6 +31,27 @@ if (allowAll) {
 
 app.use(bodyParser.json())
 
+// Explicitly handle OPTIONS preflight requests to ensure CORS headers are present
+// This is useful in some hosting/proxy environments where the cors middleware
+// may not always add headers for preflight.
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers.origin || ''
+    const allowedOrigins = [process.env.FRONTEND_ORIGIN, process.env.FRONTEND_PROD_ORIGIN].filter(Boolean)
+    if (allowAll) {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
+    } else if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '')
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return res.sendStatus(204)
+  }
+  next()
+})
+
 // Note: cors middleware is applied globally above. Explicit `app.options('*', ...)`
 // can cause path-to-regexp issues on some environments (see Render logs). The
 // global `app.use(cors(...))` handles preflight requests, so we avoid registering
