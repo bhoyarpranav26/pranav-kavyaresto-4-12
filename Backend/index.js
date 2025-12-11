@@ -36,18 +36,35 @@ app.use(bodyParser.json())
 // may not always add headers for preflight.
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
-    const origin = req.headers.origin || ''
-    const allowedOrigins = [process.env.FRONTEND_ORIGIN, process.env.FRONTEND_PROD_ORIGIN].filter(Boolean)
-    if (allowAll) {
-      res.setHeader('Access-Control-Allow-Origin', '*')
-      res.setHeader('Access-Control-Allow-Credentials', 'true')
-    } else if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '')
-      res.setHeader('Access-Control-Allow-Credentials', 'true')
+    try {
+      const origin = req.headers.origin || ''
+      const allowedOrigins = [process.env.FRONTEND_ORIGIN, process.env.FRONTEND_PROD_ORIGIN].filter(Boolean)
+      if (allowAll) {
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Credentials', 'true')
+      } else if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        // If origin is falsy (server-to-server or curl), echo back nothing
+        if (origin) res.setHeader('Access-Control-Allow-Origin', origin)
+        res.setHeader('Access-Control-Allow-Credentials', 'true')
+      }
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+      return res.sendStatus(204)
+    } catch (err) {
+      // Ensure we never crash on OPTIONS - log and return permissive headers for debugging
+      console.error('OPTIONS handler error:', err)
+      try {
+        if (allowAll) {
+          res.setHeader('Access-Control-Allow-Origin', '*')
+        }
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        return res.sendStatus(204)
+      } catch (err2) {
+        console.error('OPTIONS fallback error:', err2)
+        return res.status(500).end()
+      }
     }
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-    return res.sendStatus(204)
   }
   next()
 })
